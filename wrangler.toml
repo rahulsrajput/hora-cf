@@ -1,0 +1,35 @@
+name = "hora-alert"
+main = "src/index.ts"
+compatibility_date = "2026-03-16"
+compatibility_flags = ["nodejs_compat"]
+
+# Browser Rendering binding - lets the Worker launch a real headless
+# Chromium via Puppeteer, no separate infrastructure to manage.
+[browser]
+binding = "BROWSER"
+
+# One Durable Object instance per scheduled Telegram message
+# (heads-up or go-time). Each instance holds exactly one alarm.
+[[durable_objects.bindings]]
+name = "ALERT_ALARM"
+class_name = "AlertAlarm"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AlertAlarm"]
+
+# Non-secret config - safe to commit, edit freely. Secrets
+# (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID, MANUAL_TRIGGER_KEY) are NOT
+# here - set them with `wrangler secret put NAME` instead (see README).
+[vars]
+HORA_CITY_SEARCH = "Nagpur"
+HORA_CITY_EXACT = "Nagpur, Maharashtra, India"
+CHANNEL_URL = "https://t.me/jobfinder097"
+
+# Cron Trigger - fires the scrape. Cloudflare cron is UTC-only.
+# 02:00 and 02:15 UTC = 7:30 AM and 7:45 AM IST (IST = UTC+5:30, no
+# DST, so this mapping never shifts). Two runs: primary + one retry,
+# since Cloudflare's own timing is reliable but the site itself can
+# still fail for unrelated reasons (CAPTCHA, network blip).
+[triggers]
+crons = ["0 2 * * *", "15 2 * * *"]
